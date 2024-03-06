@@ -1,4 +1,4 @@
-name: Terraform Workflow
+name: Terraform Conditional Apply
 
 on:
   push:
@@ -7,35 +7,24 @@ on:
       - 'lambda/**'
 
 jobs:
-  find-out-changes:
+  terraform:
     runs-on: ubuntu-latest
-    outputs:
-      changed_directories: ${{ steps.set-output.outputs.changed_directories }}  # The `dirs` doesn't exist in the outputs of changed-files@v35 action.
+    name: Run Terraform on Modified Directories
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
-          fetch-depth: 0
+          terraform_version: 1.0.0
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          dir_names: true
-          dir_names_max_depth: 2  # This is optional. If not provided, full subdirectories' paths will be provided. Use it if you need to trim the output. See docs for details: https://github.com/tj-actions/changed-files/tree/main#inputs.
-          json: true
-          quotepath: false
-
-      - name: 'Set output in the matrix format'
-        id: set-output
-        run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
-
-  do-stuff:
-    runs-on: ubuntu-latest
-    if: ${{ needs.find-out-changes.outputs.changed_directories != '' }}  # Without it, the strategy parser will fail if the changed_directories is empty.
-    strategy:
-      matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
-    needs:
-      - find-out-changes
-    steps:
-      - uses: actions/checkout@v3
-      - run: zip ${{ matrix.dir }} etc.
+      - name: Detect Changes
+        id: detect_changes
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs|lambda)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
+          echo "Changed directories: $CHANGED_DIRS"
+          echo "::set-output name=changed_dirs::$CHANGED_DIRS"
+      
+      - name: Display Changed Directories
+        run: echo "The following directories have changes: ${{ steps.detect_changes.outputs.changed_dirs }}"
