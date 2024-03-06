@@ -16,9 +16,14 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with: # 'with' should align with 'uses'
           terraform_version: 1.0.0
-      - name: Detect Changes # This should align with the other step definitions
+      - name: Detect Changes
         run: |
-          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs|lambda)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
+          if [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]]; then
+            # This is likely the first push to the repository, list all files
+            CHANGED_DIRS=$(git ls-tree -r HEAD --name-only | grep -E '^(ecs|lambda)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
+          else
+            # Normal push, compare with the previous commit
+            CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs|lambda)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
+          fi
           echo "Changed directories: $CHANGED_DIRS"
-          echo "::set-output name=changed_dirs::$CHANGED_DIRS"
-        # This line might be where the error is if not correctly indented or improperly formatted.
+          echo "CHANGED_DIRS=$CHANGED_DIRS" >> $GITHUB_ENV
