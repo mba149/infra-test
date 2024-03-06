@@ -7,30 +7,35 @@ on:
       - 'lambda/**'
 
 jobs:
-  terraform:
+  find-out-changes:
     runs-on: ubuntu-latest
-
+    outputs:
+      changed_directories: ${{ steps.set-output.outputs.changed_directories }}  # The `dirs` doesn't exist in the outputs of changed-files@v35 action.
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.1.0
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          dir_names: true
+          dir_names_max_depth: 2  # This is optional. If not provided, full subdirectories' paths will be provided. Use it if you need to trim the output. See docs for details: https://github.com/tj-actions/changed-files/tree/main#inputs.
+          json: true
+          quotepath: false
 
-    - name: Terraform Init
-      run: terraform init
+      - name: 'Set output in the matrix format'
+        id: set-output
+        run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
-    - name: Check for changes
-      id: check_changes
-      run: echo "::set-output name=changed_folders::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs|lambda)/[^/]+/')"
-
-    - name: Apply Terraform changes
-      if: steps.check_changes.outputs.changed_folders
-      run: |
-        for folder in ${steps.check_changes.outputs.changed_folders}; do
-          cd $folder
-          echo $folder
-          cd -
-        done
+  do-stuff:
+    runs-on: ubuntu-latest
+    if: ${{ needs.find-out-changes.outputs.changed_directories != '' }}  # Without it, the strategy parser will fail if the changed_directories is empty.
+    strategy:
+      matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
+    needs:
+      - find-out-changes
+    steps:
+      - uses: actions/checkout@v3
+      - run: zip ${{ matrix.dir }} etc.
