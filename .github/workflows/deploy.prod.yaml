@@ -27,4 +27,5 @@ jobs:
           echo "::set-output name=changed_dirs::$CHANGED_DIRS"
       
       - name: Display Changed Directories
-        run: echo "The following directories have changes: ${{ steps.detect_changes.outputs.changed_dirs }}"
+        run: |
+          echo "The following directories have changes: ${{ steps.detect_changes.outputs.changed_dirs }}"
