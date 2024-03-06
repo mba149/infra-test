@@ -3,29 +3,22 @@ name: Terraform Conditional Apply
 on:
   push:
     paths:
-      - 'ecs/**'
-      - 'lambda/**'
+      - "ecs/**"
+      - "lambda/**"
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    name: Run Terraform on Modified Directories
     steps:
-      - name: Checkout Repository
+      - name: Checkout Repository # Make sure this line is correctly indented
         uses: actions/checkout@v2
-      
-      - name: Setup Terraform
+      - name: Setup Terraform # This line should be at the same indentation level as the previous step
         uses: hashicorp/setup-terraform@v1
-        with:
+        with: # 'with' should align with 'uses'
           terraform_version: 1.0.0
-
-      - name: Detect Changes
-        id: detect_changes
+      - name: Detect Changes # This should align with the other step definitions
         run: |
           CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs|lambda)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
           echo "Changed directories: $CHANGED_DIRS"
           echo "::set-output name=changed_dirs::$CHANGED_DIRS"
-      
-      - name: Display Changed Directories
-        run: |
-          echo "The following directories have changes: ${{ steps.detect_changes.outputs.changed_dirs }}"
+        # This line might be where the error is if not correctly indented or improperly formatted.
