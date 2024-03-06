@@ -1,4 +1,4 @@
-name: Terraform Conditional Apply
+name: Deploy ETLs
 
 on:
   push:
