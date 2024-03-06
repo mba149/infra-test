@@ -2,6 +2,8 @@ name: Terraform Conditional Apply
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "ecs/**"
       - "lambda/**"
@@ -38,4 +40,4 @@ jobs:
       - find-out-changes
     steps:
       - uses: actions/checkout@v3
-      - run: zip ${{ matrix.dir }} etc.
+      - run: echo "${{ matrix.dir }}"
