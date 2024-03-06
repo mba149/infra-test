@@ -31,6 +31,6 @@ jobs:
       run: |
         for folder in ${steps.check_changes.outputs.changed_folders}; do
           cd $folder
-          terraform apply -auto-approve
+          echo $folder
           cd -
         done
