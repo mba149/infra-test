@@ -1,0 +1,72 @@
+name: Dev Deploy ETLs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "ecs-etls/**"
+
+jobs:
+  find-out-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      # changed_directories: ${{ steps.set-output.outputs.changed_directories }}  
+      matrix: ${{ steps.detect_changes.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # - name: Get changed files
+      #   id: changed-files
+      #   uses: tj-actions/changed-files@v42
+      #   with:
+      #     dir_names: true
+      #     dir_names_max_depth: 2
+      #     json: true
+      #     quotepath: false
+      #     files_ignore: ".github/workflows/*,README.md"
+
+      - name: Detect Changes
+        id: detect_changes
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs-etls)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
+          CHANGED_DIRS_JSON=$(echo $CHANGED_DIRS | jq -R -s -c 'split(" ")')
+          echo "CHANGED_DIRS_JSON=$CHANGED_DIRS_JSON" >> $GITHUB_ENV
+          echo "$CHANGED_DIRS_JSON "
+
+      # - name: 'Set output in the matrix format'
+      #   id: set-output
+      #   run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ needs.find-out-changes.outputs.changed_directories != '' }}
+  #   strategy:
+  #     # matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
+  #     matrix: ${{fromJson(needs.find-out-changes.outputs.matrix)}}
+  #   needs:
+  #     - find-out-changes
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - name: Setup Terraform
+  #     #   uses: hashicorp/setup-terraform@v3
+  #     #   with:
+  #     #     terraform_version: 1.4.6
+  #     # - name: Configure AWS credentials
+  #     #   uses: aws-actions/configure-aws-credentials@v1
+  #     #   with:
+  #     #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+  #     #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+  #     #     aws-region: ${{ secrets.AWS_REGION }}
+  #     - name: Create ECR
+  #       run: |
+  #         echo "aws ecr"
+  #         echo "${{ matrix.dir }}"
+  #     # - name: Apply terraform
+  #     #   run: | 
+  #     #     cd "${{ matrix.dir }}"
+  #     #     terraform init -backend-config="bucket=drtavel-terraform-state-dev"
+  #     #     terraform plan -out=tfplan -var-file=dev-terraform.tfvars
+  #     #     terraform apply --auto-approve -var-file=dev-terraform.tfvars
