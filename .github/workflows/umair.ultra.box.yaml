@@ -32,11 +32,11 @@ jobs:
         id: detect_changes
         run: |
           CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs-etls)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
-          CHANGED_DIRS_JSON=$(echo $CHANGED_DIRS | jq -R -s -c 'split(" ")')
+          CHANGED_DIRS_JSON=$(echo $CHANGED_DIRS | jq -R -s -c 'split("\n") | map(select(. != ""))')
           echo "CHANGED_DIRS_JSON=$CHANGED_DIRS_JSON" >> $GITHUB_ENV
-          changed_directories={\"dir\": $CHANGED_DIRS }"
-          echo "$changed_directories"
-          echo "$CHANGED_DIRS_JSON "
+          echo "changed_directories=$CHANGED_DIRS_JSON" >> $GITHUB_OUTPUT
+          echo $CHANGED_DIRS_JSON
+          
 
       # - name: 'Set output in the matrix format'
       #   id: set-output
