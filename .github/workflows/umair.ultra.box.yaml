@@ -78,7 +78,9 @@ jobs:
     strategy:
       matrix: ${{fromJson(needs.find-out-changes.outputs.matrix)}}
     steps:
-      - uses: actions/checkout@v2
-      - name: Apply Terraform
+      - uses: actions/checkout@v4
+      - name: Creat ECR registry
         run: |
           echo ${{ matrix.path }}
+          SUBDIR="${DIR_NAME#*/}"
+          echo $SUBDIR
