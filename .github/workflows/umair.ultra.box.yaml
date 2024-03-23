@@ -82,4 +82,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: Apply Terraform
         run: |
-          cd ${{ matrix.path }}
+          cd ${{ matrix.include.path }}
