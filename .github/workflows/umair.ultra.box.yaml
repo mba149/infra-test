@@ -82,5 +82,6 @@ jobs:
       - name: Creat ECR registry
         run: |
           echo ${{ matrix.path }}
+          DIR_NAME="${{ matrix.path }}"
           SUBDIR="${DIR_NAME#*/}"
           echo $SUBDIR
