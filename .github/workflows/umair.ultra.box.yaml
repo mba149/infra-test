@@ -74,14 +74,34 @@ jobs:
 
   terraform-apply:
     runs-on: ubuntu-latest
+    env:
+      ECR_PREFIX: your-prefix 
     needs: find-out-changes
     strategy:
       matrix: ${{fromJson(needs.find-out-changes.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: your-aws-region
       - name: Creat ECR registry
         run: |
           echo ${{ matrix.path }}
           DIR_NAME="${{ matrix.path }}"
           SUBDIR="${DIR_NAME#*/}"
           echo $SUBDIR
+      - name: Create ECR Repository if it does not exist
+        run: |
+          DIR_NAME="${{ matrix.path }}"
+          IMAGE_NAME="${DIR_NAME#*/}" 
+          REPO_NAME="${ECR_PREFIX}/${{ matrix.path }}"
+
+          if ! aws ecr describe-repositories --repository-names "$IMAGE_NAME" 2>/dev/null; then
+            echo "Repository $IMAGE_NAME does not exist. Creating..."
+            aws ecr create-repository --repository-name "$IMAGE_NAME"
+          else
+            echo "Repository $IMAGE_NAME already exists. Skipping creation."
+          fi
