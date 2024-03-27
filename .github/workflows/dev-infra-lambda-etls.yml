@@ -3,7 +3,7 @@ name: Dev Deploy Lambda ETLs
 on:
   push:
     branches:
-      - dev
+      - main
 
     paths:
       - "lambda-etls/**"
