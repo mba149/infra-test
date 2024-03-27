@@ -1,0 +1,53 @@
+name: Dev Deploy Lambda ETLs
+
+on:
+  push:
+    branches:
+      # - dev
+      - main
+    paths:
+      # - "lambda-etls/**"
+      # - "lambda-layer/**"
+      "ecs-etls/**"
+
+jobs:
+  find-out-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_directories: ${{ steps.set-output.outputs.changed_directories }}  
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changes
+        id: detect_changes
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(ecs-etls)/' | awk 'BEGIN {FS="/"} {print $1"/"$2}' | uniq)
+          CHANGED_DIRS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(. != "")) | map({path: .}) | {include: .}')
+          echo "CHANGED_DIRS_JSON=$CHANGED_DIRS_JSON" >> $GITHUB_OUTPUT
+          echo $CHANGED_DIRS_JSON
+
+  terraform-apply:
+    runs-on: ubuntu-latest
+    needs: find-out-changes
+    strategy:
+      matrix: ${{fromJson(needs.find-out-changes.outputs.matrix)}}
+    steps:
+      - uses: actions/checkout@v4
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: 1.4.6
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+      - name: Apply terraform
+        run: | 
+          echo "${{ matrix.path }}"
+          # terraform init -backend-config="bucket=drtavel-terraform-state-dev"
+          # terraform plan -out=tfplan -var-file=dev-terraform.tfvars
+          # terraform apply --auto-approve -var-file=dev-terraform.tfvars
