@@ -46,7 +46,7 @@ jobs:
       #     aws-region: ${{ secrets.AWS_REGION }}
       - name: Apply terraform
         run: | 
-          echo ${{ github.ref_nam }}
+          echo ${{ github.ref_name }}
           echo "${{ matrix.path }}"
           # cd "${{ matrix.path }}"
           # terraform init -backend-config="bucket=drtavel-terraform-state-${{github.ref_name }}"
