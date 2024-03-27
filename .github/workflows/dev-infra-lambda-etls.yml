@@ -48,6 +48,3 @@ jobs:
       - name: Apply terraform
         run: | 
           echo "${{ matrix.path }}"
-          # terraform init -backend-config="bucket=drtavel-terraform-state-dev"
-          # terraform plan -out=tfplan -var-file=dev-terraform.tfvars
-          # terraform apply --auto-approve -var-file=dev-terraform.tfvars
