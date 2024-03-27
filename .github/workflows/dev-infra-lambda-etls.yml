@@ -3,12 +3,11 @@ name: Dev Deploy Lambda ETLs
 on:
   push:
     branches:
-      # - dev
-      - main
+      - dev
+
     paths:
       - "lambda-etls/**"
       - "lambda-layer/**"
-      # - "ecs-etls/**"
 
 jobs:
   find-out-changes:
@@ -47,8 +46,10 @@ jobs:
       #     aws-region: ${{ secrets.AWS_REGION }}
       - name: Apply terraform
         run: | 
+          echo ${{ github.ref_nam }}
           echo "${{ matrix.path }}"
-
-          # terraform init -backend-config="bucket=drtavel-terraform-state-dev"
-          # terraform plan -out=tfplan -var-file=dev-terraform.tfvars
-          # terraform apply --auto-approve -var-file=dev-terraform.tfvars
+          # cd "${{ matrix.path }}"
+          # terraform init -backend-config="bucket=drtavel-terraform-state-${{github.ref_name }}"
+          # terraform plan -out=tfplan -var-file=${{github.ref_name }}-terraform.tfvars
+          # terraform apply --auto-approve -var-file=${{github.ref_name }}-terraform.tfvars
+          
