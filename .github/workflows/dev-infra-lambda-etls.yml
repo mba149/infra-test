@@ -3,7 +3,7 @@ name: Dev Deploy Lambda ETLs
 on:
   push:
     branches:
-      - main
+      - dev
 
     paths:
       - "lambda-etls/**"
@@ -34,22 +34,20 @@ jobs:
       matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
     steps:
       - uses: actions/checkout@v4
-      # - name: Setup Terraform
-      #   uses: hashicorp/setup-terraform@v3
-      #   with:
-      #     terraform_version: 1.4.6
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
-      #     aws-region: ${{ secrets.AWS_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.4.6
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: Apply terraform
         run: | 
-          echo "${{ github.ref_name }}-terraform.tfvars"
-          echo "${{ matrix.path }}"
-          # cd "${{ matrix.path }}"
-          # terraform init -backend-config="bucket=drtavel-terraform-state-${{github.ref_name }}"
-          # terraform plan -out=tfplan -var-file=${{github.ref_name }}-terraform.tfvars
-          # terraform apply --auto-approve -var-file=${{github.ref_name }}-terraform.tfvars
+          cd "${{ matrix.path }}"
+          terraform init -backend-config="bucket=drtavel-terraform-state-${{github.ref_name }}"
+          terraform plan -out=tfplan -var-file=${{github.ref_name }}-terraform.tfvars
+          terraform apply --auto-approve -var-file=${{github.ref_name }}-terraform.tfvars
           

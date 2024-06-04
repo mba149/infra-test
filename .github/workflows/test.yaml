@@ -1,0 +1,24 @@
+name: Zip, Upload to S3, and Download on EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  find-out-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_directories: ${{ steps.detect_changes.outputs.CHANGED_DIRS_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changes
+        id: detect_changes
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | awk 'BEGIN {FS="/"} {print $1}' | uniq)
+          CHANGED_DIRS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(. != "")) | map({path: .}) | {include: .}')
+          echo "CHANGED_DIRS_JSON=$CHANGED_DIRS_JSON" >> $GITHUB_OUTPUT
+          echo $CHANGED_DIRS_JSON
