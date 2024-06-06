@@ -39,5 +39,5 @@ jobs:
 
       - name: Zip folder
         run: | 
-          echo ${{ envs.BUCKET_NAME }}
+          echo ${{ vars.BUCKET_NAME }}
 
