@@ -8,28 +8,29 @@ on:
       - .github/**
 
 jobs:
-  find-out-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      changed_directories: ${{ steps.detect_changes.outputs.CHANGED_DIRS_JSON }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # find-out-changes:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     changed_directories: ${{ steps.detect_changes.outputs.CHANGED_DIRS_JSON }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Detect Changes
-        id: detect_changes
-        run: |
-          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | awk 'BEGIN {FS="/"} {print $1}' | uniq)
-          CHANGED_DIRS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(. != "")) | map({path: .}) | {include: .}')
-          echo "CHANGED_DIRS_JSON=$CHANGED_DIRS_JSON" >> $GITHUB_OUTPUT
-          echo $CHANGED_DIRS_JSON
+  #     - name: Detect Changes
+  #       id: detect_changes
+  #       run: |
+  #         CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | awk 'BEGIN {FS="/"} {print $1}' | uniq)
+  #         CHANGED_DIRS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(. != "")) | map({path: .}) | {include: .}')
+  #         echo "CHANGED_DIRS_JSON=$CHANGED_DIRS_JSON" >> $GITHUB_OUTPUT
+  #         echo $CHANGED_DIRS_JSON
 
   build:
     runs-on: ubuntu-latest
-    needs: find-out-changes
+    # needs: find-out-changes
+    environment: dev
     strategy:
-      matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
+      # matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
       
     steps:
     - name: Checkout code
@@ -38,6 +39,5 @@ jobs:
 
     - name: Zip folder
       run: | 
-        echo ${{ matrix.path }}
-        zip -r ${{ matrix.path }}.zip ${{ matrix.path }}
-        ls -l
+        echo ${{ envs.BUCKET_NAME }}
+
